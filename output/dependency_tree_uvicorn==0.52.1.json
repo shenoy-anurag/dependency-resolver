@@ -1,0 +1,76 @@
+{
+  "package": "uvicorn",
+  "version": "0.52.1",
+  "max_depth": 7,
+  "tree": {
+    "name": "uvicorn",
+    "version": "0.52.1",
+    "dependencies": {
+      "click": {
+        "name": "click",
+        "version": "8.4.2",
+        "dependencies": {
+          "colorama": {
+            "name": "colorama",
+            "version": "0.4.6",
+            "dependencies": {}
+          }
+        }
+      },
+      "h11": {
+        "name": "h11",
+        "version": "0.16.0",
+        "dependencies": {}
+      },
+      "typing-extensions": {
+        "name": "typing-extensions",
+        "version": "4.16.0",
+        "dependencies": {}
+      }
+    }
+  },
+  "wheel_urls": {
+    "uvicorn": [
+      "https://files.pythonhosted.org/packages/c7/d5/68e6e9bca63c0badf67002890a46d3784c958de45b65e1275ec583ca1f06/uvicorn-0.52.1-py3-none-any.whl"
+    ],
+    "click": [
+      "https://files.pythonhosted.org/packages/fb/e2/79c688af8b210d232694e31e59da9f6ec747bae31c3f5946e4e9b98860d5/click-8.4.2-py3-none-any.whl"
+    ],
+    "colorama": [
+      "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl"
+    ],
+    "h11": [
+      "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl"
+    ],
+    "typing-extensions": [
+      "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl"
+    ]
+  },
+  "package_names": [
+    "click",
+    "colorama",
+    "h11",
+    "typing-extensions",
+    "uvicorn"
+  ],
+  "adjacency_list": {
+    "uvicorn": [
+      "click",
+      "h11",
+      "typing-extensions"
+    ],
+    "click": [
+      "colorama"
+    ],
+    "colorama": [],
+    "h11": [],
+    "typing-extensions": []
+  },
+  "versions": {
+    "uvicorn": "0.52.1",
+    "click": "8.4.2",
+    "colorama": "0.4.6",
+    "h11": "0.16.0",
+    "typing-extensions": "4.16.0"
+  }
+}
