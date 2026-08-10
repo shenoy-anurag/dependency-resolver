@@ -106,9 +106,16 @@ def main() -> None:
                         help="Path to a dependency tree JSON file")
     parser.add_argument("--wheels", default="wheels",
                         help="Directory containing wheel files")
-    parser.add_argument("--python", default=None)
-    parser.add_argument("--abi-tag", default=None)
-    parser.add_argument("--platform-tag", default=None)
+    parser.add_argument(
+        "--python", "--python-tag",
+        dest="python_tag",
+        default=None,
+        help="Python tag to select compatible wheels, e.g. cp313",
+    )
+    parser.add_argument("--abi-tag", default=None,
+                        help="ABI tag to select compatible wheels")
+    parser.add_argument("--platform-tag", default=None,
+                        help="Platform tag to select compatible wheels")
     args = parser.parse_args()
 
     if not args.dependency_tree:
@@ -139,8 +146,8 @@ def main() -> None:
         if wheel is None:
             print(f"No compatible wheel found for {pkg} (version {version})")
             sys.exit(1)
-        
-        result = install_wheel(wheel_path=wheel, wheels_folder=wheel_dir)
+
+        result = install_wheel(wheel_path=wheel)
         if result.returncode != 0:
             print(f"Failed to install wheel: {wheel}")
             sys.exit(result.returncode)
