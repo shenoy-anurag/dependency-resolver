@@ -2,12 +2,11 @@ import argparse
 import json
 import subprocess
 import sys
-from collections import defaultdict, deque
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 from graphlib import TopologicalSorter
 
-from packaging.tags import sys_tags
+from packaging.tags import sys_tags, Tag
 from packaging.utils import canonicalize_name, parse_wheel_filename
 
 
@@ -53,7 +52,11 @@ def select_wheel_for_environment(
 
         if parsed_name != safe_name:
             continue
-        if version and str(parsed_version) != version:
+        if version and version != "unknown":
+            if str(parsed_version) != version:
+                if not is_wheel_compatible(wheel_tags=tags):
+                    continue
+                fallback_candidates.append(wheel_path)
             continue
 
         if not tags:
@@ -87,6 +90,58 @@ def select_wheel_for_environment(
     if fallback_candidates:
         return fallback_candidates[0]
     return None
+
+
+def is_wheel_compatible(wheel_tags: frozenset[Tag]) -> bool:
+    """Determines whether a wheel is compatible with the current interpreter.
+
+    Args:
+        wheel_tags (frozenset[Tag]): Wheel tags
+
+    Returns:
+        bool: Is Wheel Compatible with current interpreter.
+        
+    Rules:
+    - Exact CP match allowed (cp312)
+    - Upward compatible: abi3 wheels (e.g. cp37-abi3) work on >= their build version
+    - py3 / py2.py3 compatible wheels allowed
+    - none-any always compatible
+    - If wheel specifies "none" tag for interpreter or abi, it is universal
+    """
+    current_tags = {str(t) for t in sys_tags()}
+    
+    if any(str(t) in current_tags for t in wheel_tags):
+        return True
+    
+    wheel_tags_strs = [str(t) for t in wheel_tags]
+    
+    if any(t.endswith("none-any") for t in wheel_tags_strs):
+        return True
+
+    if any(t.startswith("py3-") or t.startswith("py2.py3-") for t in wheel_tags_strs):
+        return True
+    
+    py_major, py_minor = sys.version_info[:2]
+    for t in wheel_tags_strs:
+        if t.startswith("cp") and "-abi3-" in t:
+            try:
+                wheel_cp = int(t[2:4])
+                if py_major == 3 and py_minor >= wheel_cp:
+                    return True
+            except ValueError:
+                pass
+            
+    for t in wheel_tags_strs:
+        if t.startswith("cp") and t.endswith("+"):
+            try:
+                min_cp = int(t[2:-1])
+                cur_cp = py_major * 100 + py_minor
+                if cur_cp >= min_cp:
+                    return True
+            except ValueError:
+                pass
+    
+    return False
 
 
 def install_wheel(wheel_path: Path, pip_executable: Optional[str] = None) -> subprocess.CompletedProcess:

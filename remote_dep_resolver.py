@@ -2,7 +2,8 @@ import argparse
 import json
 
 import requests
-from packaging.requirements import Requirement
+from packaging.markers import default_environment
+from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
 
 
@@ -42,11 +43,53 @@ def fetch_pypi_metadata(package_name, version=None):
     return actual_version, requires_dist
 
 
-def build_dependency_tree(package_name, version=None, max_depth=None, path=None):
+def parse_package_reference(package_reference, version=None):
+    """Parse a package reference like 'foo[extra]' into normalized name, extras, and optional version."""
+    extras = set()
+    package_name = canonicalize_name(package_reference)
+    if package_reference:
+        try:
+            requirement = Requirement(package_reference)
+            package_name = canonicalize_name(requirement.name)
+            extras = set(requirement.extras or [])
+            if version is None and requirement.specifier:
+                exact_versions = [
+                    spec.version
+                    for spec in requirement.specifier
+                    if spec.operator in ("==", "===")
+                ]
+                if exact_versions:
+                    version = exact_versions[-1]
+        except InvalidRequirement:
+            pass
+    return package_name, extras, version
+
+
+def marker_matches_extras(marker, selected_extras):
+    if marker is None:
+        return True
+
+    marker_text = str(marker)
+    if "extra" in marker_text:
+        if not selected_extras:
+            return False
+
+        env = default_environment()
+        for extra in selected_extras:
+            if marker.evaluate({**env, "extra": extra}):
+                return True
+        return False
+
+    return marker.evaluate(default_environment())
+
+
+def build_dependency_tree(package_name, version=None, extras=None, max_depth=None, path=None):
     """Recursively build a nested dependency tree for a Python package."""
     safe_name = canonicalize_name(package_name)
     if path is None:
         path = []
+    if extras is None:
+        extras = set()
 
     actual_version, requires_dist = fetch_pypi_metadata(safe_name, version)
     if not actual_version:
@@ -67,14 +110,16 @@ def build_dependency_tree(package_name, version=None, max_depth=None, path=None)
         except Exception:
             continue
 
-        if requirement.marker and "extra ==" in str(requirement.marker):
+        if not marker_matches_extras(requirement.marker, extras):
             continue
 
         dependency_name = canonicalize_name(requirement.name)
+        dependency_extras = set(requirement.extras or [])
         node["dependencies"][dependency_name] = build_dependency_tree(
             dependency_name,
             max_depth=max_depth,
             path=current_path,
+            extras=dependency_extras,
         )
 
     return node
@@ -173,15 +218,23 @@ def main():
     parser.add_argument("--max-depth", type=int, default=None, help="Limit recursion depth")
     args = parser.parse_args()
 
+    package_name, selected_extras, version = parse_package_reference(args.package, args.version)
     print(f"Resolving dependency tree for {args.package}...\n")
-    tree = build_dependency_tree(args.package, version=args.version, max_depth=args.max_depth)
+    tree = build_dependency_tree(
+        package_name,
+        version=version,
+        extras=selected_extras,
+        max_depth=args.max_depth,
+    )
     wheel_urls, package_names = collect_dependency_artifacts(tree)
     adjacency_list = build_adjacency_list(tree)
     versions_dict = build_versions_dict(tree)
 
     export = {
         "package": args.package,
-        "version": args.version,
+        "normalized_package": package_name,
+        "extras": sorted(selected_extras),
+        "version": version,
         "max_depth": args.max_depth,
         "tree": tree,
         "wheel_urls": wheel_urls,

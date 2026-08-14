@@ -49,6 +49,40 @@ class RemoteDependencyResolverTests(unittest.TestCase):
             "Circular Dependency Detected",
         )
 
+    def test_parse_package_reference_extracts_extras(self):
+        name, extras, version = remote_dep_resolver.parse_package_reference("paddleocr[doc-parser]")
+
+        self.assertEqual(name, "paddleocr")
+        self.assertEqual(extras, {"doc-parser"})
+        self.assertIsNone(version)
+
+    def test_build_dependency_tree_includes_extra_dependencies(self):
+        def fake_fetch(package_name, version=None):
+            if package_name == "paddleocr":
+                return "3.7.0", ["pydantic_core>=2.0; extra == 'doc-parser'"]
+            if package_name == "pydantic_core":
+                return "2.47.0", []
+            return None, []
+
+        with patch("remote_dep_resolver.fetch_pypi_metadata", side_effect=fake_fetch):
+            package_name, extras, version = remote_dep_resolver.parse_package_reference("paddleocr[doc-parser]")
+            tree = remote_dep_resolver.build_dependency_tree(package_name, version=version, extras=extras)
+
+        self.assertEqual(tree["name"], "paddleocr")
+        self.assertIn("pydantic_core", tree["dependencies"])
+        self.assertEqual(tree["dependencies"]["pydantic_core"]["version"], "2.47.0")
+
+    def test_build_dependency_tree_excludes_extra_dependencies_when_not_selected(self):
+        def fake_fetch(package_name, version=None):
+            if package_name == "paddleocr":
+                return "3.7.0", ["pydantic_core>=2.0; extra == 'doc-parser'"]
+            return "unknown", []
+
+        with patch("remote_dep_resolver.fetch_pypi_metadata", side_effect=fake_fetch):
+            tree = remote_dep_resolver.build_dependency_tree("paddleocr")
+
+        self.assertNotIn("pydantic_core", tree["dependencies"])
+
     def test_collect_wheel_download_urls_returns_wheel_links(self):
         payload = {
             "urls": [

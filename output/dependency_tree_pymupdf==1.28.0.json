@@ -1,0 +1,32 @@
+{
+  "package": "pymupdf",
+  "version": "1.28.0",
+  "max_depth": 7,
+  "tree": {
+    "name": "pymupdf",
+    "version": "1.28.0",
+    "dependencies": {}
+  },
+  "wheel_urls": {
+    "pymupdf": [
+      "https://files.pythonhosted.org/packages/06/86/f831fef09013f33b3c9c09fb3923f2ff53e1e437f6ace14b8ae46392f558/pymupdf-1.28.0-cp310-abi3-win32.whl",
+      "https://files.pythonhosted.org/packages/1c/f5/bf75fc7a415722f8b33662054f82d88520c0cbfd4c36d0e08aeaec605e49/pymupdf-1.28.0-cp310-abi3-manylinux_2_28_aarch64.whl",
+      "https://files.pythonhosted.org/packages/2e/5d/1a03f53eb0449900469335fcfc742ca28e3ba159b7d650e0921d50b8b308/pymupdf-1.28.0-cp310-abi3-win_amd64.whl",
+      "https://files.pythonhosted.org/packages/33/f4/23775bbda0781b61fc398cc75079a2b0e64696d8fcf93271748883e9627e/pymupdf-1.28.0-cp310-abi3-macosx_11_0_arm64.whl",
+      "https://files.pythonhosted.org/packages/4d/b4/ec0e017bc42857cc86bd651441dbc41cc18be48d4698ecd27aac491e0c9a/pymupdf-1.28.0-cp310-abi3-musllinux_1_2_x86_64.whl",
+      "https://files.pythonhosted.org/packages/58/69/5d12c9f1f2d76f28383d6110a069c79fbfced5a4f97bb1ee6e8354f52bb7/pymupdf-1.28.0-cp310-abi3-manylinux_2_28_x86_64.whl",
+      "https://files.pythonhosted.org/packages/62/b1/46b5b3d8ef3cc71114667cf10c4d8b33f39af97253af32e9a0986775b638/pymupdf-1.28.0-cp314-cp314t-manylinux_2_28_x86_64.whl",
+      "https://files.pythonhosted.org/packages/72/f6/1e52ce243ca792254f6223b4017c5667194c146ce9b88baf37bc5eb3d1c9/pymupdf-1.28.0-cp313-abi3-pyemscripten_2025_0_wasm32.whl",
+      "https://files.pythonhosted.org/packages/c8/b7/88043e38cc7529de070f0c9bd267fa258035cca0b4ad5260536b994594a7/pymupdf-1.28.0-cp310-abi3-macosx_10_15_x86_64.whl"
+    ]
+  },
+  "package_names": [
+    "pymupdf"
+  ],
+  "adjacency_list": {
+    "pymupdf": []
+  },
+  "versions": {
+    "pymupdf": "1.28.0"
+  }
+}
