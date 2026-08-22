@@ -27,7 +27,8 @@ def fetch_pypi_metadata(package_name, version=None):
     info = data.get("info", {})
     actual_version = version or info.get("version")
     releases = data.get("releases", {}) or {}
-    release_info = releases.get(actual_version, {}) if isinstance(releases, dict) else {}
+    release_info = releases.get(
+        actual_version, {}) if isinstance(releases, dict) else {}
 
     if not isinstance(release_info, dict):
         release_info = {}
@@ -186,6 +187,27 @@ def build_versions_dict(tree):
     return versions
 
 
+def collect_package_names(tree):
+    """Collect package names across the whole dependency graph."""
+    package_names = set()
+
+    def walk(node):
+        if not isinstance(node, dict):
+            return
+
+        node_name = node.get("name")
+        if isinstance(node_name, str) and node_name:
+            package_names.add(node_name)
+
+        dependencies = node.get("dependencies")
+        if isinstance(dependencies, dict):
+            for dependency_node in dependencies.values():
+                walk(dependency_node)
+
+    walk(tree)
+    return sorted(package_names)
+
+
 def collect_dependency_artifacts(tree):
     """Collect wheel URLs and package names across the whole dependency graph."""
     wheel_urls_by_package = {}
@@ -212,13 +234,18 @@ def collect_dependency_artifacts(tree):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Resolve a remote Python dependency tree from PyPI")
-    parser.add_argument("package", nargs="?", default="paddlepaddle", help="Package name to resolve")
-    parser.add_argument("version", nargs="?", default=None, help="Optional version to resolve")
-    parser.add_argument("--max-depth", type=int, default=None, help="Limit recursion depth")
+    parser = argparse.ArgumentParser(
+        description="Resolve a remote Python dependency tree from PyPI")
+    parser.add_argument("package", nargs="?",
+                        default="paddlepaddle", help="Package name to resolve")
+    parser.add_argument("version", nargs="?", default=None,
+                        help="Optional version to resolve")
+    parser.add_argument("--max-depth", type=int,
+                        default=None, help="Limit recursion depth")
     args = parser.parse_args()
 
-    package_name, selected_extras, version = parse_package_reference(args.package, args.version)
+    package_name, selected_extras, version = parse_package_reference(
+        args.package, args.version)
     print(f"Resolving dependency tree for {args.package}...\n")
     tree = build_dependency_tree(
         package_name,
@@ -226,7 +253,8 @@ def main():
         extras=selected_extras,
         max_depth=args.max_depth,
     )
-    wheel_urls, package_names = collect_dependency_artifacts(tree)
+    # wheel_urls, package_names = collect_dependency_artifacts(tree)
+    package_names = collect_package_names(tree)
     adjacency_list = build_adjacency_list(tree)
     versions_dict = build_versions_dict(tree)
 
@@ -237,7 +265,7 @@ def main():
         "version": version,
         "max_depth": args.max_depth,
         "tree": tree,
-        "wheel_urls": wheel_urls,
+        # "wheel_urls": wheel_urls,
         "package_names": package_names,
         "adjacency_list": adjacency_list,
         "versions": versions_dict,
